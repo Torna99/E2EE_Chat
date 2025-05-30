@@ -8,13 +8,11 @@ public class Client {
 
     public static void main(String[] args) {
 
-        // Initialize the client application
-        System.out.println("Client application started...");
-
+        /*
+         *  Argument validation
+         */
         InetAddress addr = null;
         int port = -1;
-
-        // Argument validation
         try{
             if(args.length == 2){
                 addr = InetAddress.getByName(args[0]);
@@ -44,7 +42,11 @@ public class Client {
 			System.exit(2);
 		} 
 
-        // Connection to the Server and socket creation
+        System.out.println("Client application started...");
+
+        /*
+        * Connection to the Server and socket creation
+         */ 
         Socket socket = null;
         DataInputStream inputSocket = null;
         DataOutputStream outputSocket = null;
@@ -68,7 +70,8 @@ public class Client {
 		}
 
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-        String message = null;
+        String sendingMessage = null;
+        String receivingMessage = null;
 
         try{
             inputSocket = new DataInputStream(socket.getInputStream());
@@ -79,11 +82,39 @@ public class Client {
             System.exit(2);
 		}
 
-        // Starting communication
-
-        // TODO: 
         /*
-         * mandare mex al server
+         * Communication
          */
+
+        System.out.println("Chat started: ");
+        try{
+            while((sendingMessage = stdIn.readLine()) != null){
+                // Sending Message
+                outputSocket.writeUTF(sendingMessage);
+
+                // Receiving Message
+                receivingMessage = inputSocket.readUTF();
+            }
+        }catch (Exception e) {
+			System.err.println("Errors: ");
+			e.printStackTrace();
+			System.err.println("Shutting down the connection!");
+			System.exit(1);
+		}
+
+        /*
+         * Closing sockets
+         */
+        try{
+            System.out.println("\n\n Closing the Client.");
+            socket.shutdownInput();
+            socket.shutdownOutput();
+            socket.close();
+        }catch (Exception e) {
+			System.err.println("Errors: ");
+			e.printStackTrace();
+			System.err.println("Shutting down the connection!");
+			System.exit(1);
+		}
     }
 }
