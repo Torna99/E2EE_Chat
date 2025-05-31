@@ -9,7 +9,7 @@ public class Client {
     public static void main(String[] args) {
 
         /*
-         *  Argument validation
+         *  Arguments check
          */
         InetAddress addr = null;
         int port = -1;
@@ -18,8 +18,9 @@ public class Client {
                 addr = InetAddress.getByName(args[0]);
                 port = Integer.parseInt(args[1]);
                 if (port < 1024 || port > 65536){
-                    System.out.println("Invalid port!\n" + USAGE);
-                    System.out.println(1);
+                    System.err.println("Port is outside the range of valid ports. [1024-65535]");
+					System.out.println(USAGE);
+                    System.exit(1);
                 }                
             }else{
                 System.out.println(USAGE);                
