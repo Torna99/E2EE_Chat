@@ -65,7 +65,9 @@ public class Server {
         */
         try{
             int i = 0;
-            while(true){
+            while(i < 2){
+                System.out.println("Server: waiting for connections requests");
+
                 try{
                     clientSocket[i] = serverSocket.accept();
                     clientSocket[i].setSoTimeout(SOCKET_TIMEOUT);
@@ -77,9 +79,10 @@ public class Server {
 					continue;
 				}
             }
-    
-            // TODO 
-            //new TCP_ServerThread(clientSocket, eventi).start(); //PASSARE COME ARGOMENTO ANCHE LA STRUTTURA DATI 
+            
+            // Da migliorare
+            new ServerThread(clientSocket[0], clientSocket[1]).start(); 
+            new ServerThread(clientSocket[1], clientSocket[0]).start(); 
 
         } catch (Exception e) {
 			System.err.println("Server Error: server's fatal error!\n Shutting down the Server...");

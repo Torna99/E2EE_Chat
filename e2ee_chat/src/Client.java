@@ -95,6 +95,7 @@ public class Client {
 
                 // Receiving Message
                 receivingMessage = inputSocket.readUTF();
+                System.out.println("[REMOTE USER] " + receivingMessage);
             }
         }catch (Exception e) {
 			System.err.println("Errors: ");
