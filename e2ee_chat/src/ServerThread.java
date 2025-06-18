@@ -11,11 +11,13 @@ public class ServerThread extends Thread{
     
     private Socket clientSocket_input = null;
     private Socket clientSocket_output = null;
+    private int seed = -1;
 
-    public ServerThread(Socket to, Socket from){
+    public ServerThread(Socket to, Socket from, int seed){
         super();
         this.clientSocket_input = from;
         this.clientSocket_output = to;
+        this.seed = seed;
     }
 
     public void run(){
@@ -38,6 +40,11 @@ public class ServerThread extends Thread{
         String mex = "";
 
         try{
+
+            // Sending seed
+            outSocket.writeInt(seed);
+            System.out.println("Sending seed: " + seed);
+
             while(true){
                 mex = inSocket.readUTF();
                 System.out.println("Received: " + mex);

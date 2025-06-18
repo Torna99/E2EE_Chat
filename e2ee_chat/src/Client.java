@@ -1,10 +1,18 @@
 import java.net.*;
+
+import ciphers.AESGCMCipherWrapper;
+import prng.SecureRandomWrapper;
+import utils.ConvertingUtils;
+
 import java.io.*;
 
 public class Client {
 
     public static final String USAGE = "Usage: java Client serverAddr serverPort";
     public static final int SOCKET_TIMEOUT = 60000;
+
+    // TEMP (?)
+    public static final String SECURERANDOM_ALGORITHM = "SHA1PRNG";
 
     public static void main(String[] args) {
 
@@ -73,6 +81,7 @@ public class Client {
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
         String sendingMessage = null;
         String receivingMessage = null;
+        String plain_receivingMessage = null;
 
         try{
             inputSocket = new DataInputStream(socket.getInputStream());
@@ -89,13 +98,27 @@ public class Client {
 
         System.out.println("Chat started: ");
         try{
+
+            /*
+             * Creating AESGCM instance
+             * by receiving the seed from the server for the SecureRandom
+             */
+            int seed = inputSocket.readInt();
+            System.out.println("Received seed: " + seed);
+            SecureRandomWrapper srw = new SecureRandomWrapper(SECURERANDOM_ALGORITHM);
+            srw.changeSeed(seed);
+            byte[] iv = new byte[16]; // AES GCM IV size is 16 bytes
+            srw.fillByteArray(iv);
+            AESGCMCipherWrapper cipher = new AESGCMCipherWrapper(srw);
+
             while((sendingMessage = stdIn.readLine()) != null){
                 // Sending Message
-                outputSocket.writeUTF(sendingMessage);
+                outputSocket.writeUTF(ConvertingUtils.toHexString(cipher.encrypt(sendingMessage, "", iv)));
 
                 // Receiving Message
                 receivingMessage = inputSocket.readUTF();
-                System.out.println("[REMOTE USER] " + receivingMessage);
+                plain_receivingMessage = cipher.decrypt(ConvertingUtils.fromHexString(receivingMessage), "", iv);
+                System.out.println("[REMOTE USER] " + receivingMessage + "\n decypted -> " + plain_receivingMessage);
             }
         }catch (Exception e) {
 			System.err.println("Errors: ");
