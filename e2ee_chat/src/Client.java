@@ -1,13 +1,13 @@
 import java.net.*;
 import java.security.*;
 
-import ciphers.AESGCMCipherWrapper;
-import prng.SecureRandomWrapper;
+import ciphers.AESGCM_Cipher;
+import ciphers.AES_KeyGen;
 import utils.ConvertingUtils;
 import dh.DiffieHellman;
 
 import java.io.*;
-import javax.crypto.KeyAgreement;
+import javax.crypto.SecretKey;
 
 public class Client {
 
@@ -82,9 +82,7 @@ public class Client {
 		}
 
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-        String sendingMessage = null;
-        String receivingMessage = null;
-        String plain_receivingMessage = null;
+        String message = null;
 
         try{
             inputSocket = new DataInputStream(socket.getInputStream());
@@ -127,19 +125,31 @@ public class Client {
             byte[] sharedSecret = DiffieHellman.computeSharedSecret(privKey, peerPubKey);
             System.out.println("Shared secret computed: " + ConvertingUtils.toHexString(sharedSecret));
 
-            
-            while(true);
-            // while((sendingMessage = stdIn.readLine()) != null){
+            /*
+             * AES-GCM Cipher initialization
+             * The cipher is initialized with the shared secret as key
+             */
+            SecretKey aesKey = AES_KeyGen.deriveAESKey(sharedSecret);
+            System.out.println("Derived AES Key: " + aesKey);
+            AESGCM_Cipher cipher = new AESGCM_Cipher(aesKey);
 
-            //     // Sending Message
-            //     srw.fillByteArray(iv);
-            //     outputSocket.writeUTF(ConvertingUtils.toHexString(cipher.encrypt(sendingMessage, "", iv)));
+            while((message = stdIn.readLine()) != null){
 
-            //     // Receiving Message
-            //     receivingMessage = inputSocket.readUTF();
-            //     plain_receivingMessage = cipher.decrypt(ConvertingUtils.fromHexString(receivingMessage), "", iv);
-            //     System.out.println("[REMOTE USER] " + receivingMessage + "\n decypted -> " + plain_receivingMessage);
-            // }
+                // Sending Message
+                byte [] ecryptedMex = cipher.encrypt(ConvertingUtils.toByteArray(message));
+                System.out.println("[Encrypted message -> " + ConvertingUtils.toHexString(ecryptedMex)+"]");
+                outputSocket.writeInt(ecryptedMex.length);
+                outputSocket.write(ecryptedMex);
+
+                // Receiving Message
+                int lenReceivingMex = inputSocket.readInt();
+                byte[] receivedMex = new byte[lenReceivingMex];
+                inputSocket.readFully(receivedMex);
+                String decryptedMex = new String(cipher.decrypt(receivedMex));
+                System.out.println("[Encrypted message received -> " + ConvertingUtils.toHexString(receivedMex) + "]");
+                System.out.println("Received: " + decryptedMex);
+
+            }
         }catch (Exception e) {
 			System.err.println("Errors: ");
 			e.printStackTrace();

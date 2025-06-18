@@ -13,13 +13,11 @@ public class ServerThread extends Thread{
     
     private Socket clientSocket_input = null;
     private Socket clientSocket_output = null;
-    private int seed = -1;
 
     public ServerThread(Socket to, Socket from){
         super();
         this.clientSocket_input = from;
         this.clientSocket_output = to;
-        this.seed = seed;
     }
 
     public void run(){
@@ -39,7 +37,7 @@ public class ServerThread extends Thread{
         /*
          * Communication
          */
-        String mex = "";
+        byte [] mex = null;
 
         try{
 
@@ -57,10 +55,13 @@ public class ServerThread extends Thread{
             System.out.println("Sent public key: " + DiffieHellman.decodePublicKey(receivedKey));
 
             while(true){
-                mex = inSocket.readUTF();
+                int len = inSocket.readInt();
+                mex = new byte[len];
+                inSocket.readFully(mex);
                 System.out.println("Received: " + mex);
 
-                outSocket.writeUTF(mex);
+                outSocket.writeInt(len);
+                outSocket.write(mex);
                 System.out.println("Sending: " + mex);
             }
 		} catch (Exception e) {

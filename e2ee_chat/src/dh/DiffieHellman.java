@@ -1,7 +1,6 @@
 package dh;
 
 import javax.crypto.KeyAgreement;
-import javax.crypto.spec.DHParameterSpec;
 import java.security.*;
 import java.security.spec.X509EncodedKeySpec;
 
