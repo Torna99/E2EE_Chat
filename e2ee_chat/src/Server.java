@@ -11,12 +11,7 @@ public class Server {
     public static final String USAGE = "Usage: java Server [serverPort>1024]";
     public static final int DEFAULT_PORT = 9999;
     public static final int N_CLIENTS = 2; // number of client expected
-    public static final int SOCKET_TIMEOUT = 60000;
-
-    public static final String SECURERANDOM_ALGORITH = "SHA1PRNG"; /// (?)
-    // TEMP
-    public static final int TEMP_SEED = 998877;
-    
+    public static final int SOCKET_TIMEOUT = 60000;    
 
     public static void main(String[] args) throws IOException{
 
@@ -85,19 +80,10 @@ public class Server {
 				}
             }
 
-            /*
-             * Generating key (?)
-             */
-            // SecureRandomWrapper srw = new SecureRandomWrapper(SECURERANDOM_ALGORITH);
-            // srw.changeSeed(TEMP_SEED);
-            // byte[] iv_GCM = new byte[16];
-			// srw.fillByteArray(iv_GCM);
-            // AESGCMCipherWrapper gcmCipher = new AESGCMCipherWrapper(srw);
-
             // Da migliorare
             System.out.println("Server: " + N_CLIENTS + " clients connected, starting threads...");
-            new ServerThread(clientSocket[0], clientSocket[1], TEMP_SEED).start(); 
-            new ServerThread(clientSocket[1], clientSocket[0], TEMP_SEED).start(); 
+            new ServerThread(clientSocket[0], clientSocket[1]).start(); 
+            new ServerThread(clientSocket[1], clientSocket[0]).start(); 
 
         } catch (Exception e) {
 			System.err.println("Server Error: server's fatal error!\n Shutting down the Server...");

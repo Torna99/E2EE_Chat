@@ -7,13 +7,15 @@
 import java.io.*;
 import java.net.*;
 
+import dh.DiffieHellman;
+
 public class ServerThread extends Thread{
     
     private Socket clientSocket_input = null;
     private Socket clientSocket_output = null;
     private int seed = -1;
 
-    public ServerThread(Socket to, Socket from, int seed){
+    public ServerThread(Socket to, Socket from){
         super();
         this.clientSocket_input = from;
         this.clientSocket_output = to;
@@ -41,9 +43,18 @@ public class ServerThread extends Thread{
 
         try{
 
-            // Sending seed
-            outSocket.writeInt(seed);
-            System.out.println("Sending seed: " + seed);
+            /*
+             * Key exchang for Diffie-Hellman: receiving public key
+             * from the other client and sending its own public key.
+             */
+            int lenReceivingKey = inSocket.readInt();
+            byte[] receivedKey = new byte[lenReceivingKey];
+            inSocket.readFully(receivedKey, 0, lenReceivingKey);
+            System.out.println("Received public key: " + DiffieHellman.decodePublicKey(receivedKey));
+
+            outSocket.writeInt(lenReceivingKey);
+            outSocket.write(receivedKey, 0, lenReceivingKey);
+            System.out.println("Sent public key: " + DiffieHellman.decodePublicKey(receivedKey));
 
             while(true){
                 mex = inSocket.readUTF();

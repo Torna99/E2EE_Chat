@@ -1,10 +1,13 @@
 import java.net.*;
+import java.security.*;
 
 import ciphers.AESGCMCipherWrapper;
 import prng.SecureRandomWrapper;
 import utils.ConvertingUtils;
+import dh.DiffieHellman;
 
 import java.io.*;
+import javax.crypto.KeyAgreement;
 
 public class Client {
 
@@ -100,26 +103,43 @@ public class Client {
         try{
 
             /*
-             * Creating AESGCM instance
-             * by receiving the seed from the server for the SecureRandom
-             */
-            int seed = inputSocket.readInt();
-            System.out.println("Received seed: " + seed);
-            SecureRandomWrapper srw = new SecureRandomWrapper(SECURERANDOM_ALGORITHM);
-            srw.changeSeed(seed);
-            byte[] iv = new byte[16]; // AES GCM IV size is 16 bytes
-            srw.fillByteArray(iv);
-            AESGCMCipherWrapper cipher = new AESGCMCipherWrapper(srw);
+             * Diffie-Hellman Key Exchange. 
+             * After Generating it's own Key Pair (Public and Private), it send the (encoded) pubkey to the other clients,
+             * then it wait the other client's key. 
+             * Finally it generate the shared key,
+            */
+            KeyPair dhKeyPair = DiffieHellman.generateDHKeyPair();
+            PublicKey pubKey = dhKeyPair.getPublic();
+            PrivateKey privKey = dhKeyPair.getPrivate();
+            System.out.println("Generated Diffie-Hellman Key Pair: \n PubKey ->" + pubKey + "\n PrivKey ->" + privKey);
 
-            while((sendingMessage = stdIn.readLine()) != null){
-                // Sending Message
-                outputSocket.writeUTF(ConvertingUtils.toHexString(cipher.encrypt(sendingMessage, "", iv)));
+            byte[] encodedPubKey = DiffieHellman.getEncodedPubKey(pubKey);
+            outputSocket.writeInt(encodedPubKey.length);
+            outputSocket.write(encodedPubKey);
+            System.out.println("Sent public key...");
+            
+            int receivedKeyLen = inputSocket.readInt();
+            byte [] receivedPubKey_Bytes = new byte[receivedKeyLen];
+            inputSocket.readFully(receivedPubKey_Bytes);
+            PublicKey peerPubKey = DiffieHellman.decodePublicKey(receivedPubKey_Bytes);
+            System.out.println("Received public key: " + peerPubKey);
 
-                // Receiving Message
-                receivingMessage = inputSocket.readUTF();
-                plain_receivingMessage = cipher.decrypt(ConvertingUtils.fromHexString(receivingMessage), "", iv);
-                System.out.println("[REMOTE USER] " + receivingMessage + "\n decypted -> " + plain_receivingMessage);
-            }
+            byte[] sharedSecret = DiffieHellman.computeSharedSecret(privKey, peerPubKey);
+            System.out.println("Shared secret computed: " + ConvertingUtils.toHexString(sharedSecret));
+
+            
+            while(true);
+            // while((sendingMessage = stdIn.readLine()) != null){
+
+            //     // Sending Message
+            //     srw.fillByteArray(iv);
+            //     outputSocket.writeUTF(ConvertingUtils.toHexString(cipher.encrypt(sendingMessage, "", iv)));
+
+            //     // Receiving Message
+            //     receivingMessage = inputSocket.readUTF();
+            //     plain_receivingMessage = cipher.decrypt(ConvertingUtils.fromHexString(receivingMessage), "", iv);
+            //     System.out.println("[REMOTE USER] " + receivingMessage + "\n decypted -> " + plain_receivingMessage);
+            // }
         }catch (Exception e) {
 			System.err.println("Errors: ");
 			e.printStackTrace();
