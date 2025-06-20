@@ -133,6 +133,10 @@ public class Client {
             System.out.println("Derived AES Key: " + aesKey);
             AESGCM_Cipher cipher = new AESGCM_Cipher(aesKey);
 
+            MessageReceiver messageReceiver = new MessageReceiver(inputSocket, cipher);
+            messageReceiver.start();
+            System.out.println("MessageReceiver thread started...");
+
             while((message = stdIn.readLine()) != null){
 
                 // Sending Message
@@ -140,15 +144,6 @@ public class Client {
                 System.out.println("[Encrypted message -> " + ConvertingUtils.toHexString(ecryptedMex)+"]");
                 outputSocket.writeInt(ecryptedMex.length);
                 outputSocket.write(ecryptedMex);
-
-                // Receiving Message
-                int lenReceivingMex = inputSocket.readInt();
-                byte[] receivedMex = new byte[lenReceivingMex];
-                inputSocket.readFully(receivedMex);
-                String decryptedMex = new String(cipher.decrypt(receivedMex));
-                System.out.println("[Encrypted message received -> " + ConvertingUtils.toHexString(receivedMex) + "]");
-                System.out.println("Received: " + decryptedMex);
-
             }
         }catch (Exception e) {
 			System.err.println("Errors: ");
