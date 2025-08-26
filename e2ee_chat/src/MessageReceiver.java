@@ -1,5 +1,5 @@
 import java.io.DataInputStream;
-import java.net.Socket;
+
 
 import ciphers.AESGCM_Cipher;
 
@@ -31,7 +31,7 @@ public class MessageReceiver extends Thread {
 
                 // Convert bytes to string and print
                 String message = new String(decryptedMessage);
-                System.out.println("Received: " + message);
+                System.out.println("< OTHER > " + message);
             }
         } catch (Exception e) {
             System.err.println("Error in MessageReceiver: " + e.getMessage());

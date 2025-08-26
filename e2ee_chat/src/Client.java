@@ -109,39 +109,42 @@ public class Client {
             KeyPair dhKeyPair = DiffieHellman.generateDHKeyPair();
             PublicKey pubKey = dhKeyPair.getPublic();
             PrivateKey privKey = dhKeyPair.getPrivate();
-            System.out.println("Generated Diffie-Hellman Key Pair: \n PubKey ->" + pubKey + "\n PrivKey ->" + privKey);
+            //System.out.println("Generated Diffie-Hellman Key Pair: \n PubKey ->" + pubKey + "\n PrivKey ->" + privKey);
 
             byte[] encodedPubKey = DiffieHellman.getEncodedPubKey(pubKey);
             outputSocket.writeInt(encodedPubKey.length);
             outputSocket.write(encodedPubKey);
-            System.out.println("Sent public key...");
+            //System.out.println("Sent public key...");
             
             int receivedKeyLen = inputSocket.readInt();
             byte [] receivedPubKey_Bytes = new byte[receivedKeyLen];
             inputSocket.readFully(receivedPubKey_Bytes);
             PublicKey peerPubKey = DiffieHellman.decodePublicKey(receivedPubKey_Bytes);
-            System.out.println("Received public key: " + peerPubKey);
+            //System.out.println("Received public key: " + peerPubKey);
 
             byte[] sharedSecret = DiffieHellman.computeSharedSecret(privKey, peerPubKey);
-            System.out.println("Shared secret computed: " + ConvertingUtils.toHexString(sharedSecret));
+            //System.out.println("Shared secret computed: " + ConvertingUtils.toHexString(sharedSecret));
 
             /*
              * AES-GCM Cipher initialization
              * The cipher is initialized with the shared secret as key
              */
             SecretKey aesKey = AES_KeyGen.deriveAESKey(sharedSecret);
-            System.out.println("Derived AES Key: " + aesKey);
+            //System.out.println("Derived AES Key: " + aesKey);
             AESGCM_Cipher cipher = new AESGCM_Cipher(aesKey);
 
+            /*
+             * Strarting Clients communcations 
+             */
             MessageReceiver messageReceiver = new MessageReceiver(inputSocket, cipher);
             messageReceiver.start();
-            System.out.println("MessageReceiver thread started...");
+            //System.out.println("MessageReceiver thread started...");
 
             while((message = stdIn.readLine()) != null){
 
                 // Sending Message
                 byte [] ecryptedMex = cipher.encrypt(ConvertingUtils.toByteArray(message));
-                System.out.println("[Encrypted message -> " + ConvertingUtils.toHexString(ecryptedMex)+"]");
+                //System.out.println("[Encrypted message -> " + ConvertingUtils.toHexString(ecryptedMex)+"]");
                 outputSocket.writeInt(ecryptedMex.length);
                 outputSocket.write(ecryptedMex);
             }
