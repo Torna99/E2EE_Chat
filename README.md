@@ -24,7 +24,7 @@ Il progetto è sviluppato interamente in Java.
 
 ---
 
-## 🚀 Installazione e uso 
+## Installazione e uso 🚀
 
 
 1. **Compila il progetto**
